@@ -3,7 +3,7 @@
 Plugin Name: WP All Import
 Plugin URI: https://www.wpallimport.com/wordpress-xml-csv-import/?utm_source=import-plugin-free&utm_medium=wp-plugins-page&utm_campaign=upgrade-to-pro
 Description: The most powerful solution for importing XML and CSV files to WordPress. Create Posts and Pages with content from any XML or CSV file. A paid upgrade to WP All Import Pro is available for support and additional features.
-Version: 3.9.0
+Version: 3.9.4
 Author: Soflyy
 */
 
@@ -25,7 +25,7 @@ define('WP_ALL_IMPORT_ROOT_URL', rtrim(plugin_dir_url(__FILE__), '/'));
  */
 define('WP_ALL_IMPORT_PREFIX', 'pmxi_');
 
-define('PMXI_VERSION', '3.9.0');
+define('PMXI_VERSION', '3.9.4');
 
 define('PMXI_EDITION', 'free');
 
@@ -851,7 +851,7 @@ final class PMXI_Plugin {
                         foreach ($imports_list as $import_entry) {
                             $import_id = $import_entry->id;
                             $import = $import->getById($import_id);
-                            $import_options = pmxi_maybe_unserialize($import->options);
+                            $import_options = \pmxi_maybe_unserialize($import->options);
                             $import_type = $import_options['custom_type'];
                             if ( in_array($import_type, array('import_users', 'shop_customer')) ) {
                                 $user_imports[] = $import_id;
@@ -898,7 +898,7 @@ final class PMXI_Plugin {
 				foreach ($imports_list as $import_entry) {
 					$import_id = $import_entry->id;
 					$import = $import->getById($import_id);
-					$import_options = pmxi_maybe_unserialize($import->options);
+					$import_options = \pmxi_maybe_unserialize($import->options);
 					$import_type = $import_options['custom_type'];
 					if ( in_array($import_type, array('import_users', 'shop_customer')) ) {
 						$user_imports[] = $import_id;
@@ -1020,10 +1020,10 @@ final class PMXI_Plugin {
 			foreach ($fields_to_alter as $field) {
 				switch ($field) {
 					case 'image_url':
-						$wpdb->query("ALTER TABLE {$table} ADD `image_url` VARCHAR(600) NOT NULL DEFAULT '';");
+						$wpdb->query("ALTER TABLE {$table} ADD `image_url` TEXT;");
 						break;
 					case 'image_filename':
-						$wpdb->query("ALTER TABLE {$table} ADD `image_filename` VARCHAR(600) NOT NULL DEFAULT '';");
+						$wpdb->query("ALTER TABLE {$table} ADD `image_filename` TEXT;");
 						break;
 					default:
 						# code...
@@ -1410,7 +1410,11 @@ final class PMXI_Plugin {
                     'approved' => '',
                     'type' => '',
                     'date' => 'now'
-                )
+                ),
+
+                // Excel Alternative Processing
+                'use_alternative_excel_processing' => 0,
+
 			);
 		}
 

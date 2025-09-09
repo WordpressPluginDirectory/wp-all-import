@@ -23,15 +23,10 @@ if ( ! class_exists('PMXI_Upload')){
 			if (empty($import_id)) {
 				$import_id = $input->get('import_id');
 			}
-            // Get import ID from CLI arguments.
-            if (empty($import_id) && PMXI_Plugin::getInstance()->isCli()) {
-                global $argv;
-                foreach ($argv as $key => $arg) {
-                    if ($arg === 'run' && !empty($argv[$key + 1])) {
-                        $import_id = $argv[$key + 1];
-                    }
-                }
-            }
+			// Get import ID from CLI arguments.
+			if ( empty( $import_id ) && PMXI_Plugin::getInstance()->isCli() ) {
+				$import_id = wp_all_import_get_import_id();
+			}
 			if ( $uploads['error'] ) {
                 $this->uploadsPath = false;
             } else {
@@ -63,8 +58,12 @@ if ( ! class_exists('PMXI_Upload')){
 
 				$archive = new WpaiPclZip($this->file);
 
-				// Attempt to extract files.
-				$v_result_list = $archive->extract(PCLZIP_OPT_PATH, $this->uploadsPath, PCLZIP_OPT_REPLACE_NEWER, PCLZIP_OPT_EXTRACT_DIR_RESTRICTION, $this->uploadsPath, PCLZIP_OPT_EXTRACT_EXT_RESTRICTIONS, ['php','phtml','htaccess']);
+				// Get allowed file extensions (whitelist approach)
+				$allowed_extensions = wp_all_import_get_allowed_zip_extensions();
+
+				// Attempt to extract files with whitelist restrictions
+				$v_result_list = $archive->extract(WPAI_PCLZIP_OPT_PATH, $this->uploadsPath, WPAI_PCLZIP_OPT_REPLACE_NEWER, WPAI_PCLZIP_OPT_EXTRACT_DIR_RESTRICTION, $this->uploadsPath, WPAI_PCLZIP_OPT_EXTRACT_WHITELIST_RESTRICTIONS, $allowed_extensions);
+
 			    if (empty($v_result_list) || !is_array($v_result_list) && $v_result_list < 1) {
 			    	$this->errors->add('form-validation', __('WP All Import couldn\'t find a file to import inside your ZIP.<br/><br/>Either the .ZIP file is broken, or doesn\'t contain a file with an extension of  XML, CSV, PSV, DAT, or TXT. <br/>Please attempt to unzip your .ZIP file on your computer to ensure it is a valid .ZIP file which can actually be unzipped, and that it contains a file which WP All Import can import.', 'wp_all_import_plugin'));
 			   	} else {
@@ -82,7 +81,7 @@ if ( ! class_exists('PMXI_Upload')){
 									$decodedTemplates = json_decode($templates, true);
 									$templateOptions = empty($decodedTemplates[0]) ? current($decodedTemplates) : $decodedTemplates;
 									if ( ! empty($templateOptions) and isset($templateOptions[0]['_import_type']) and $templateOptions[0]['_import_type'] == 'url' ) {
-										$options = pmxi_maybe_unserialize($templateOptions[0]['options']);
+										$options = \pmxi_maybe_unserialize($templateOptions[0]['options']);
 										return array(
 											'filePath' => $templateOptions[0]['_import_url'],
 											'bundle' => $bundle,
@@ -259,7 +258,7 @@ if ( ! class_exists('PMXI_Upload')){
 				$templateOptions = empty($decodedTemplates[0]) ? current($decodedTemplates) : $decodedTemplates;
 			}
 
-			$options = (empty($templateOptions[0]['options'])) ? false : pmxi_maybe_unserialize($templateOptions[0]['options']);
+			$options = (empty($templateOptions[0]['options'])) ? false : \pmxi_maybe_unserialize($templateOptions[0]['options']);
 
 			if ( ! empty($options['root_element'])) $this->root_element = $options['root_element'];
 
@@ -319,8 +318,12 @@ if ( ! class_exists('PMXI_Upload')){
 
 					$archive = new WpaiPclZip($tmpname);
 
-					// Attempt to extract files.
-					$v_result_list = $archive->extract(PCLZIP_OPT_PATH, $this->uploadsPath, PCLZIP_OPT_REPLACE_NEWER, PCLZIP_OPT_EXTRACT_DIR_RESTRICTION, $this->uploadsPath, PCLZIP_OPT_EXTRACT_EXT_RESTRICTIONS, ['php','phtml','htaccess']);
+					// Get allowed file extensions (whitelist approach)
+				$allowed_extensions = wp_all_import_get_allowed_zip_extensions();
+
+				// Attempt to extract files with whitelist restrictions
+					$v_result_list = $archive->extract(WPAI_PCLZIP_OPT_PATH, $this->uploadsPath, WPAI_PCLZIP_OPT_REPLACE_NEWER, WPAI_PCLZIP_OPT_EXTRACT_DIR_RESTRICTION, $this->uploadsPath, WPAI_PCLZIP_OPT_EXTRACT_WHITELIST_RESTRICTIONS, $allowed_extensions);
+
 					if (empty($v_result_list) || !is_array($v_result_list) && $v_result_list < 1) {
 				    	$this->errors->add('form-validation', __('WP All Import couldn\'t find a file to import inside your ZIP.<br/><br/>Either the .ZIP file is broken, or doesn\'t contain a file with an extension of  XML, CSV, PSV, DAT, or TXT. <br/>Please attempt to unzip your .ZIP file on your computer to ensure it is a valid .ZIP file which can actually be unzipped, and that it contains a file which WP All Import can import.', 'wp_all_import_plugin'));
 				   	} else {
@@ -545,7 +548,7 @@ if ( ! class_exists('PMXI_Upload')){
 				$templateOptions = empty($decodedTemplates[0]) ? current($decodedTemplates) : $decodedTemplates;
 			}
 
-			$options = (empty($templateOptions[0]['options'])) ? false : pmxi_maybe_unserialize($templateOptions[0]['options']);
+			$options = (empty($templateOptions[0]['options'])) ? false : \pmxi_maybe_unserialize($templateOptions[0]['options']);
 
 			if ( ! empty($options['root_element'])) $this->root_element = $options['root_element'];
 
